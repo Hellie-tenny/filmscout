@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import Hero from './Hero';
+import Featured from './Featured';
 
 export default function Landing() {
 
@@ -74,38 +76,13 @@ export default function Landing() {
         <div>
 
             <div className='py-5'>
-                <h1 className='text-white font-bold text-center'>Featured Movies</h1>
 
-                <div className='flex justify-center h-[40vh]'>
-                    {
-                        featuredMovies.map((movie) => (
+                <Hero />
 
-                            <div className='h-fit m-2 relative bg-red-500 w-2/12' key={movie.id}>
-                                <img
-                                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                                    alt={movie.title}
-                                    loading="lazy"
-                                    className='w-full'
-                                />
-
-                                <div className='absolute bottom-0 h-2/5 z-10 bg-linear-to-b from-black/0 to-black flex flex-col justify-end w-full p-2'>
-                                    <h2 className='text-white font-bold'>{movie.title}</h2>
-                                    {
-                                        movie.genre_ids.map((genreId: number) => (
-                                            <span className='text-green-500'>{genresList[genreId]}</span>
-                                            
-                                        ))
-                                    }
-                                    
-                                </div>
-
-                            </div>
-
-                        ))
-                    }
-
-
-                </div>
+                <Featured
+                    movies={featuredMovies}
+                    genresList={genresList}
+                />
 
                 <div>
                     

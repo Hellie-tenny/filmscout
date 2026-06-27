@@ -1,13 +1,17 @@
 import './App.css'
+import { Routes, Route } from 'react-router'
 import Header from './components/Header'
 import Landing from './components/Landing'
+import Discover from './pages/Discover'
 
 function App() {
-
   return (
-    <div className='min-h-screen p-4 bg-slate-800'>
+    <div className='min-h-screen w-full bg-slate-800 text-white'>
       <Header />
-      <Landing />
+      <Routes>
+        <Route path='/' element={<Landing />} />
+        <Route path='/discover' element={<Discover />} />
+      </Routes>
     </div>
   )
 }
