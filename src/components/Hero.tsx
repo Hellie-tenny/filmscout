@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 export default function Hero() {
     return (
-        <div className='relative h-64 w-full overflow-hidden sm:h-96 lg:h-[28rem] relative'>
+        <div className='h-64 w-full overflow-hidden sm:h-96 lg:h-112 relative'>
             <img
                 className='h-full w-full object-cover'
                 src={heroImage}
