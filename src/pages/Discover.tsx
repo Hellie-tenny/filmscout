@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import useDiscoverMovies from '../hooks/useDiscoverMovies'
+import type { Movie } from '../types/movie'
 
 const TMDB_GENRES = [
   { id: 28, name: 'Action' },
@@ -26,6 +28,8 @@ export default function Discover() {
   const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>([])
 
   const selectedGenres = TMDB_GENRES.filter((genre) => selectedGenreIds.includes(genre.id))
+
+  const { movies, loading, error, refresh } = useDiscoverMovies(selectedGenreIds)
 
   const toggleGenre = (genreId: number) => {
     setSelectedGenreIds((current) =>
@@ -74,6 +78,60 @@ export default function Discover() {
         >
           Next
         </button>
+      </div>
+
+      <div className='mt-6'>
+        {error && (
+          <div className='py-4 text-center text-rose-400'>Error: {error}</div>
+        )}
+
+        {loading ? (
+          <div className='mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className='rounded-lg bg-slate-900/50 p-3 animate-pulse'>
+                <div className='h-64 w-full rounded-md bg-slate-800' />
+                <div className='mt-3 flex items-center justify-between'>
+                  <div className='w-3/4'>
+                    <div className='h-4 w-2/3 rounded bg-slate-700' />
+                    <div className='mt-2 h-3 w-1/3 rounded bg-slate-700' />
+                  </div>
+                  <div className='ml-3 rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200'>
+                    --
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          !error && movies.length > 0 && (
+            <div className='mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'>
+              {movies.map((movie: Movie & { score: number }) => (
+                <div key={movie.id} className='rounded-lg bg-slate-900/50 p-3'>
+                  {movie.poster_path ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                      alt={movie.title}
+                      className='w-full rounded-md object-cover'
+                    />
+                  ) : (
+                    <div className='flex h-64 items-center justify-center rounded-md bg-slate-800 text-slate-400'>No image</div>
+                  )}
+
+                  <div className='mt-3 flex items-center justify-between'>
+                    <div>
+                      <h3 className='text-sm font-semibold'>{movie.title}</h3>
+                      <p className='text-xs text-slate-400'>Vote: {movie.vote_average}</p>
+                    </div>
+                    <div className='ml-3 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-slate-950'>
+                      {movie.score.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
       </div>
     </div>
   )
