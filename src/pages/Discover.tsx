@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useDiscoverMovies from '../hooks/useDiscoverMovies'
+import MediaModal from '../components/MediaModal'
 import type { MediaItem, MediaType } from '../types/media'
 
 const MOVIE_GENRES = [
@@ -47,6 +48,7 @@ export default function Discover() {
   const [activeTab, setActiveTab] = useState<MediaType>('movie')
   const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>([])
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set())
+  const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null)
 
   const genres = activeTab === 'movie' ? MOVIE_GENRES : TV_GENRES
   const genreMap: Record<number, string> = Object.fromEntries(genres.map((g) => [g.id, g.name]))
@@ -61,7 +63,8 @@ export default function Discover() {
     )
   }
 
-  const toggleLike = (movieId: number) => {
+  const toggleLike = (e: React.MouseEvent, movieId: number) => {
+    e.stopPropagation() // prevent card click from firing
     setLikedIds((current) => {
       const next = new Set(current)
       next.has(movieId) ? next.delete(movieId) : next.add(movieId)
@@ -71,7 +74,6 @@ export default function Discover() {
 
   const releaseYear = (date: string) => date?.slice(0, 4) ?? '—'
 
-  // reset genres when switching tabs
   const handleTabSwitch = (tab: MediaType) => {
     setActiveTab(tab)
     setSelectedGenreIds([])
@@ -123,23 +125,21 @@ export default function Discover() {
         })}
       </div>
 
-      <div className='mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-        <p className='text-slate-300'>
-          {selectedGenreIds.length > 0
-            ? `${selectedGenreIds.length} genre${selectedGenreIds.length === 1 ? '' : 's'} selected`
-            : 'No genres selected yet.'}
+      {selectedGenreIds.length > 0 && (
+        <p className='mt-4 text-sm text-slate-400'>
+          {selectedGenreIds.length} genre{selectedGenreIds.length === 1 ? '' : 's'} selected
         </p>
-        <button
-          type='button'
-          disabled={selectedGenreIds.length === 0}
-          className='inline-flex items-center justify-center rounded-full bg-cyan-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-slate-700'
-        >
-          Next
-        </button>
-      </div>
+      )}
 
       <div className='mt-6'>
         {error && <div className='py-4 text-center text-rose-400'>Error: {error}</div>}
+
+        {!error && selectedGenreIds.length === 0 && (
+          <div className='mt-10 flex flex-col items-center text-center text-slate-500'>
+            <span className='text-4xl mb-3'>🎬</span>
+            <p className='text-sm'>Pick a genre above to get started.</p>
+          </div>
+        )}
 
         {loading ? (
           <div className='mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'>
@@ -162,7 +162,11 @@ export default function Discover() {
               {movies.map((movie: MediaItem & { score: number }) => {
                 const isLiked = likedIds.has(movie.id)
                 return (
-                  <div key={movie.id} className='flex flex-col rounded-lg bg-slate-900/50 p-3'>
+                  <div
+                    key={movie.id}
+                    className='flex flex-col rounded-lg bg-slate-900/50 p-3 cursor-pointer hover:bg-slate-800/70 transition-colors'
+                    onClick={() => setSelectedItem(movie)}
+                  >
                     <div className='relative'>
                       {movie.poster_path ? (
                         <img
@@ -205,7 +209,7 @@ export default function Discover() {
                       <span className='text-xs text-slate-400'>⭐ {movie.vote_average.toFixed(1)}</span>
                       <button
                         type='button'
-                        onClick={() => toggleLike(movie.id)}
+                        onClick={(e) => toggleLike(e, movie.id)}
                         className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                           isLiked
                             ? 'bg-green-500 text-slate-950'
@@ -222,6 +226,17 @@ export default function Discover() {
           )
         )}
       </div>
+
+      {/* modal */}
+      {selectedItem && (
+        <MediaModal
+          item={selectedItem}
+          mediaType={activeTab}
+          genreMap={genreMap}
+          onClose={() => setSelectedItem(null)}
+          onSelect={(item) => setSelectedItem(item)}
+        />
+      )}
     </div>
   )
 }
