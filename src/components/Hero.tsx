@@ -1,26 +1,39 @@
-import React from 'react'
 import heroImage from '../assets/imgs/hero.jpg'
 import { Link } from 'react-router-dom'
 
 export default function Hero() {
     return (
-        <div className='h-64 w-full overflow-hidden sm:h-96 lg:h-112 relative'>
+        <div className='relative w-full h-72 sm:h-96 lg:h-[480px] overflow-hidden'>
             <img
-                className='h-full w-full object-cover'
+                className='h-full w-full object-cover object-center scale-105'
                 src={heroImage}
-                alt="hero_image"
+                alt="hero"
             />
 
-            <div className='absolute inset-x-0 bottom-0 flex h-[35%] flex-col items-center justify-end bg-gradient-to-t from-black/80 to-black/0 px-4 pb-4 sm:h-[40%]'>
+            {/* full overlay gradient — dark at bottom, subtle at top */}
+            <div className='absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent' />
+
+            {/* centered content */}
+            <div className='absolute inset-0 flex flex-col items-center justify-center px-4 text-center'>
+                <p className='text-xs font-semibold uppercase tracking-widest text-green-400 mb-3'>
+                    Your personal movie guide
+                </p>
+                <h1 className='text-3xl sm:text-5xl font-extrabold text-white leading-tight max-w-xl'>
+                    Find Your Next <span className='text-green-400'>Favorite Film</span>
+                </h1>
+                <p className='mt-3 text-sm sm:text-base text-white/70 max-w-md'>
+                    Discover top-rated movies streaming right now, picked based on what you love.
+                </p>
                 <Link
                     to='/discover'
-                    className='rounded-full bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-green-400'
+                    className='mt-6 rounded-full bg-green-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-green-400 active:scale-95'
                 >
-                    Discover
+                    Start Discovering
                 </Link>
-                <p className='mt-2 text-center text-sm text-white/90'>Explore trending movies and discover your next favorite.</p>
             </div>
 
+            {/* bottom fade into page background */}
+            <div className='absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950 to-transparent' />
         </div>
     )
 }

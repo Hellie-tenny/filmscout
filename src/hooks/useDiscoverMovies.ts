@@ -41,6 +41,7 @@ export function contentScore(
 
 export default function useDiscoverMovies(
   genreIds: number[],
+  mediaType: 'movie' | 'tv' = 'movie',
   ratedMoviesParam?: RatedMovie[],
   likedMoviesParam?: Movie[]
 ) {
@@ -49,7 +50,7 @@ export default function useDiscoverMovies(
   const [movies, setMovies] = useState<Array<Movie & { score: number }>>([])
   const [refreshIndex, setRefreshIndex] = useState(0)
 
-  
+
 
   const ratedMovies = useMemo(() => ratedMoviesParam ?? [], [ratedMoviesParam])
   const likedMovies = useMemo(() => likedMoviesParam ?? [], [likedMoviesParam])
@@ -82,7 +83,11 @@ export default function useDiscoverMovies(
       setError(null)
       // Filter mock movies by requested genres when possible
       const filtered = mockMovies.filter((m) => m.genre_ids.some((g) => genreIds.includes(g)))
-      setMovies(filtered.length > 0 ? filtered : mockMovies)
+      const fallbackMovies = (filtered.length > 0 ? filtered : mockMovies).map((movie) => ({
+        ...movie,
+        score: contentScore(movie, genreIds, ratedMovies, likedMovies),
+      }))
+      setMovies(fallbackMovies)
       setLoading(false)
       return
     }
@@ -104,7 +109,8 @@ export default function useDiscoverMovies(
         // If an API key is provided (v3), use it as a query param. Otherwise use v4 Bearer token.
         if (apiKey) params.append('api_key', String(apiKey))
 
-        const url = `https://api.themoviedb.org/3/discover/movie?${params.toString()}`
+        const endpoint = mediaType === 'movie' ? 'movie' : 'tv'
+        const url = `https://api.themoviedb.org/3/discover/${endpoint}?${params.toString()}`
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         if (!apiKey && token) headers.Authorization = `Bearer ${token}`
 
@@ -133,15 +139,14 @@ export default function useDiscoverMovies(
       const scored = unique.map((m) => ({ ...m, score: contentScore(m, genreIds, ratedMovies, likedMovies) }))
 
       scored.sort((a, b) => b.score - a.score)
-
-      setMovies(scored)
+      setMovies(scored.slice(0, 10))
       setLoading(false)
     } catch (err: any) {
       setError(err?.message || String(err))
       setMovies([])
       setLoading(false)
     }
-  }, [genreIds, ratedMovies, likedMovies])
+  }, [genreIds, mediaType, ratedMovies, likedMovies])
 
   useEffect(() => {
     fetchMovies()

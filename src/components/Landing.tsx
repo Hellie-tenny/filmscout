@@ -1,96 +1,44 @@
-import { useEffect, useState } from 'react'
-import Hero from './Hero';
-import Featured from './Featured';
+import { useState } from 'react'
+import Hero from './Hero'
+import Featured from './Featured'
+import useLanding from '../hooks/useLanding'
+import type { MediaType } from '../types/media'
 
 export default function Landing() {
+  const { featuredMovies, featuredShows, movieGenres, tvGenres, loading, error } = useLanding()
+  const [activeTab, setActiveTab] = useState<MediaType>('movie')
 
-    const [trendingMovies, setTrendingMovies] = useState<any[]>([]);
-    const [genresList, setGenresList] = useState<{[key: number]: string}>({});
+  const movies = activeTab === 'movie' ? featuredMovies : featuredShows
+  const genres = activeTab === 'movie' ? movieGenres : tvGenres
 
-    useEffect(() => {
-        const options = {
-            method: 'GET',
-            headers: {
-                accept: 'application/json',
-                Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMzM2YmI4ZmJhMTBmYjMwYThkZWY4MmVlNjM0NDViNCIsIm5iZiI6MTYzMjgyMTUxNy41MzIsInN1YiI6IjYxNTJlMTBkZDFjYTJhMDA0MjYxZjk4ZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.L8uAoa4O5gbaiqm8pIPdbpBKb9spKVlS7Ng5M0fF41Y'
-            }
-        };
+  return (
+    <div className='py-5'>
+      <Hero />
 
-        const loadTrendingMovies = async () => {
+      {/* tab switcher */}
+      <div className='px-4 sm:px-6 lg:px-8 mt-6 flex gap-2'>
+        {(['movie', 'tv'] as MediaType[]).map((tab) => (
+          <button
+            key={tab}
+            type='button'
+            onClick={() => setActiveTab(tab)}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+              activeTab === tab
+                ? 'bg-green-500 text-slate-950'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            {tab === 'movie' ? 'Movies' : 'TV Shows'}
+          </button>
+        ))}
+      </div>
 
-            try {
-                fetch('https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc', options).
-                    then(res => res.json()).
-                    then(data => {
-                        setTrendingMovies(data.results)
-                    })
-            } catch (error) {
-                console.log("Error getting movies", error)
-            }
-
-        }
-
-        loadTrendingMovies();
-
-        const fetchGenres = async () => {
-            try {
-                const res = await fetch("https://api.themoviedb.org/3/genre/movie/list", options);
-
-                if (!res.ok) {
-                    throw new Error(`HTTP ERROR ${res.status}`)
-                }
-
-                const data = await res.json();
-                const fetchedGenres = data.genres;
-
-                const genresMap: {} = Object.fromEntries(
-                    fetchedGenres.map((genre: any) => [genre.id, genre.name])
-                );
-                setGenresList(genresMap);
-                console.log("Here are the generes", genresMap)
-
-            } catch (error) {
-                console.log("Error fetching genres", error)
-            }
-        }
-
-        fetchGenres();
-
-
-
-        // const trending = fetch('https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc', options)
-        //     .then(res => res.json())
-        //     .then(res => console.log(res))
-        //     .catch(err => console.error(err)
-        //     );
-
-
-    }, [])
-
-    console.log(trendingMovies);
-
-
-    const featuredMovies = trendingMovies.slice(0, 3);
-
-    return (
-        <div>
-
-            <div className='py-5'>
-
-                <Hero />
-
-                <Featured
-                    movies={featuredMovies}
-                    genresList={genresList}
-                />
-
-                <div>
-                    
-                </div>
-
-            </div>
-
-
-        </div>
-    )
+      <Featured
+        movies={movies}
+        genresList={genres}
+        loading={loading}
+        error={error}
+      />
+    </div>
+  )
 }
