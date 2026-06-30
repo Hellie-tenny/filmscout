@@ -4,6 +4,7 @@ import Header from './components/Header'
 import Landing from './components/Landing'
 import Discover from './pages/Discover'
 import NewReleases from './pages/NewReleases'
+import Watchlist from './pages/Watchlist'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path='/' element={<Landing />} />
         <Route path='/discover' element={<Discover />} />
         <Route path='/new-releases' element={<NewReleases />} />
+        <Route path='/watchlist' element={<Watchlist />} />
       </Routes>
     </div>
   )

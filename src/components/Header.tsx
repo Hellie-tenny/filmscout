@@ -14,6 +14,7 @@ export default function Header() {
           <NavLink to='/' end className={linkClass}>Home</NavLink>
           <NavLink to='/discover' className={linkClass}>Discover</NavLink>
           <NavLink to='/new-releases' className={linkClass}>New Releases</NavLink>
+          <NavLink to='/watchlist' className={linkClass}>Watchlist</NavLink>
         </nav>
       </header>
     </div>

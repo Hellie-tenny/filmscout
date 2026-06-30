@@ -8,9 +8,11 @@ type Props = {
   genreMap: Record<number, string>
   onClose: () => void
   onSelect: (item: MediaItem) => void
+  isInWatchlist: boolean
+  onToggleWatchlist: () => void
 }
 
-export default function MediaModal({ item, mediaType, genreMap, onClose, onSelect }: Props) {
+export default function MediaModal({ item, mediaType, genreMap, onClose, onSelect, isInWatchlist, onToggleWatchlist }: Props) {
   const { details, loading, error } = useMediaDetails(item.id, mediaType)
 
   // close on Escape key
@@ -89,7 +91,18 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
               <p className='mt-1 text-xs italic text-slate-500'>{details.tagline}</p>
             )}
           </div>
-
+          {!loading && details && (
+            <button
+              type='button'
+              onClick={onToggleWatchlist}
+              className={`mt-3 rounded-full px-4 py-2 text-sm font-medium transition-colors ${isInWatchlist
+                  ? 'bg-green-500 text-slate-950'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+            >
+              {isInWatchlist ? '✓ Added to Watchlist' : '+ Add to Watchlist'}
+            </button>
+          )}
           {/* genre tags */}
           {!loading && details && (
             <div className='flex flex-wrap gap-1 mt-3'>
