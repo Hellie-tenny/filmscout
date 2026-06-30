@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router'
 import Header from './components/Header'
 import Landing from './components/Landing'
 import Discover from './pages/Discover'
+import NewReleases from './pages/NewReleases'
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
       <Routes>
         <Route path='/' element={<Landing />} />
         <Route path='/discover' element={<Discover />} />
+        <Route path='/new-releases' element={<NewReleases />} />
       </Routes>
     </div>
   )
