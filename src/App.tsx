@@ -5,6 +5,7 @@ import Landing from './components/Landing'
 import Discover from './pages/Discover'
 import NewReleases from './pages/NewReleases'
 import Watchlist from './pages/Watchlist'
+import Search from './pages/Search'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path='/discover' element={<Discover />} />
         <Route path='/new-releases' element={<NewReleases />} />
         <Route path='/watchlist' element={<Watchlist />} />
+        <Route path='/search' element={<Search />} />
       </Routes>
     </div>
   )
