@@ -1,6 +1,6 @@
-import type { Movie } from '../types/movie'
+import type { MediaItem } from '../types/media'
 
-const mockMovies: Movie[] = [
+const mockMovies: MediaItem[] = [
   {
     id: 1000001,
     title: 'The Mockingbird Heist',
@@ -9,6 +9,7 @@ const mockMovies: Movie[] = [
     vote_average: 7.8,
     genre_ids: [35, 80],
     poster_path: null,
+    media_type: 'movie',
   },
   {
     id: 1000002,
@@ -18,6 +19,7 @@ const mockMovies: Movie[] = [
     vote_average: 8.1,
     genre_ids: [18, 878],
     poster_path: null,
+    media_type: 'movie',
   },
   {
     id: 1000003,
@@ -27,6 +29,7 @@ const mockMovies: Movie[] = [
     vote_average: 7.2,
     genre_ids: [18, 53],
     poster_path: null,
+    media_type: 'movie',
   },
 ]
 

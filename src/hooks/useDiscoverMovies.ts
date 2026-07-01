@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Movie } from '../types/movie'
+import type { MediaItem } from '../types/media'
 import mockMovies from '../mocks/mockMovies'
 
-type RatedMovie = { movie: Movie; rating: number }
+type RatedMovie = { movie: MediaItem; rating: number }
 
 export function contentScore(
-  movie: Movie,
+  movie: MediaItem,
   selectedGenreIds: number[],
   ratedMovies: RatedMovie[] = [],
-  likedMovies: Movie[] = []
+  likedMovies: MediaItem[] = []
 ) {
   const selectedSet = new Set<number>(selectedGenreIds)
 
@@ -43,17 +43,17 @@ export default function useDiscoverMovies(
   genreIds: number[],
   mediaType: 'movie' | 'tv' = 'movie',
   ratedMoviesParam?: RatedMovie[],
-  likedMoviesParam?: Movie[]
+  likedMoviesParam?: MediaItem[]
 ) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [movies, setMovies] = useState<Array<Movie & { score: number }>>([])
+  const [movies, setMovies] = useState<Array<MediaItem & { score: number }>>([])
   const [refreshIndex, setRefreshIndex] = useState(0)
 
 
 
   const ratedMovies = useMemo(() => ratedMoviesParam ?? [], [ratedMoviesParam])
-  const likedMovies = useMemo(() => likedMoviesParam ?? [], [likedMoviesParam])
+  const likedMovies = useMemo<MediaItem[]>(() => likedMoviesParam ?? [], [likedMoviesParam])
 
   const fetchMovies = useCallback(async () => {
     if (!genreIds || genreIds.length === 0) {
@@ -72,10 +72,6 @@ export default function useDiscoverMovies(
       token = undefined
     }
 
-    const hasToken = Boolean(token)
-    const hasApiKey = Boolean(apiKey)
-    const tokenLooksLikeV3 = token && /^[0-9a-fA-F]{32}$/.test(String(token))
-
     if (!token && !apiKey) {
       // In development, if no TMDB credentials are provided, fall back to a small
       // mock dataset so the app can run without external API keys.
@@ -85,6 +81,7 @@ export default function useDiscoverMovies(
       const filtered = mockMovies.filter((m) => m.genre_ids.some((g) => genreIds.includes(g)))
       const fallbackMovies = (filtered.length > 0 ? filtered : mockMovies).map((movie) => ({
         ...movie,
+        media_type: mediaType,
         score: contentScore(movie, genreIds, ratedMovies, likedMovies),
       }))
       setMovies(fallbackMovies)
@@ -122,12 +119,12 @@ export default function useDiscoverMovies(
         }
 
         const data = await res.json()
-        return (data.results || []) as Movie[]
+        return (data.results || []) as MediaItem[]
       })
 
       const allResults = await Promise.all(fetches)
 
-      const byId = new Map<number, Movie>()
+      const byId = new Map<number, MediaItem>()
       for (const list of allResults) {
         for (const m of list) {
           if (!byId.has(m.id)) byId.set(m.id, m)

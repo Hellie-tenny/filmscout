@@ -50,6 +50,7 @@ export default function Watchlist() {
     const GENRE_MAP: Record<number, string> = Object.fromEntries(
         [...MOVIE_GENRES, ...TV_GENRES].map((g) => [g.id, g.name])
     )
+
     const { watchlist, removeFromWatchlist, isInWatchlist, toggleWatchlist } = useWatchlist()
     const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null)
     const { isDisliked, toggleDisliked } = useDisliked()
@@ -125,7 +126,7 @@ export default function Watchlist() {
                 <MediaModal
                     item={selectedItem}
                     mediaType={selectedItem.media_type} // or activeTab for Discover/NewReleases
-                    genreMap={genreMap} // or GENRE_MAP for Search/Watchlist
+                    genreMap={GENRE_MAP}
                     onClose={() => setSelectedItem(null)}
                     onSelect={(item) => setSelectedItem(item)}
                     isInWatchlist={isInWatchlist(selectedItem.id)}

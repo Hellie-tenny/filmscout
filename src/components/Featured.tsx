@@ -19,7 +19,7 @@ function SkeletonCard() {
   )
 }
 
-function HeroCard({ movie, genresList }: { movie: MovieWithProviders; genresList: Record<number, string> }) {
+function HeroCard({ movie, genresList }: { movie: MediaWithProviders; genresList: Record<number, string> }) {
   return (
     <div className='relative w-full h-96 rounded-xl overflow-hidden'>
       {movie.poster_path ? (
@@ -43,7 +43,7 @@ function HeroCard({ movie, genresList }: { movie: MovieWithProviders; genresList
         {movie.providers.length > 0 && (
           <div className='flex items-center gap-2 mb-2'>
             <span className='text-xs text-green-400 font-medium'>Streaming on</span>
-            {movie.providers.slice(0, 3).map((name) => (
+            {movie.providers.slice(0, 3).map((name: string) => (
               <img
                 key={name}
                 src={`https://image.tmdb.org/t/p/w45${movie.providerLogos[name]}`}
@@ -62,7 +62,7 @@ function HeroCard({ movie, genresList }: { movie: MovieWithProviders; genresList
           <span className='text-amber-400 text-sm font-semibold'>⭐ {movie.vote_average.toFixed(1)}</span>
           <span className='text-slate-400 text-sm'>{movie.release_date?.slice(0, 4)}</span>
           <div className='flex gap-1'>
-            {(movie.genre_ids ?? []).slice(0, 2).map((gid) => (
+            {(movie.genre_ids ?? []).slice(0, 2).map((gid: number) => (
               <span key={gid} className='text-xs text-slate-300 bg-slate-700/70 rounded-full px-2 py-0.5'>
                 {genresList[gid] ?? 'Unknown'}
               </span>
@@ -79,7 +79,7 @@ function HeroCard({ movie, genresList }: { movie: MovieWithProviders; genresList
   )
 }
 
-function SmallCard({ movie, genresList }: { movie: MovieWithProviders; genresList: Record<number, string> }) {
+function SmallCard({ movie }: { movie: MediaWithProviders }) {
   return (
     <div className='flex-shrink-0 w-40 sm:w-48 relative rounded-lg overflow-hidden h-64'>
       {movie.poster_path ? (
@@ -100,7 +100,7 @@ function SmallCard({ movie, genresList }: { movie: MovieWithProviders; genresLis
         {/* streaming logos */}
         {movie.providers.length > 0 && (
           <div className='flex gap-1 mb-1'>
-            {movie.providers.slice(0, 2).map((name) => (
+            {movie.providers.slice(0, 2).map((name: string) => (
               <img
                 key={name}
                 src={`https://image.tmdb.org/t/p/w45${movie.providerLogos[name]}`}
@@ -146,7 +146,7 @@ export default function Featured({ movies, genresList, loading, error }: Feature
         {loading || rest.length === 0
           ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
           : rest.map((movie) => (
-              <SmallCard key={movie.id} movie={movie} genresList={genresList} />
+              <SmallCard key={movie.id} movie={movie} />
             ))}
       </div>
     </div>

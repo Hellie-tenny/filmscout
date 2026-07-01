@@ -5,7 +5,6 @@ import Featured from './Featured'
 import useLanding from '../hooks/useLanding'
 import type { MediaType } from '../types/media'
 import { Clapperboard, Sparkles, Bookmark } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 const HOW_IT_WORKS = [
   {
