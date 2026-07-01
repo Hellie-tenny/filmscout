@@ -152,7 +152,7 @@ export default function Search() {
         <MediaModal
           item={selectedItem}
           mediaType={selectedItem.media_type} // or activeTab for Discover/NewReleases
-          genreMap={genreMap} // or GENRE_MAP for Search/Watchlist
+          genreMap={GENRE_MAP} // or GENRE_MAP for Search/Watchlist
           onClose={() => setSelectedItem(null)}
           onSelect={(item) => setSelectedItem(item)}
           isInWatchlist={isInWatchlist(selectedItem.id)}
