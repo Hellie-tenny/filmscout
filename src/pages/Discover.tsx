@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import useDiscoverMovies from '../hooks/useDiscoverMovies'
 import MediaModal from '../components/MediaModal'
 import type { MediaItem, MediaType } from '../types/media'
 import useWatchlist from '../hooks/useWatchlist'
+import useDisliked from '../hooks/useDisliked'
 
 const MOVIE_GENRES = [
   { id: 28, name: 'Action' },
@@ -46,15 +47,43 @@ const TV_GENRES = [
 ]
 
 export default function Discover() {
-  const [activeTab, setActiveTab] = useState<MediaType>('movie')
-  const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>([])
+  const [activeTab, setActiveTab] = useState<MediaType>(() => {
+    return (localStorage.getItem('discover_tab') as MediaType) ?? 'movie'
+  })
+  const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('discover_genres')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null)
+
+  useEffect(() => {
+    localStorage.setItem('discover_tab', activeTab)
+    localStorage.setItem('discover_genres', JSON.stringify(selectedGenreIds))
+  }, [activeTab, selectedGenreIds])
+
   const { isInWatchlist, toggleWatchlist } = useWatchlist()
+  const { isDisliked, toggleDisliked, disliked } = useDisliked() // ← single call
 
   const genres = activeTab === 'movie' ? MOVIE_GENRES : TV_GENRES
-  const genreMap: Record<number, string> = Object.fromEntries(genres.map((g) => [g.id, g.name]))
+  const genreMap: Record<number, string> = Object.fromEntries(
+    genres.map((g) => [g.id, g.name])
+  )
 
-  const { movies, loading, error } = useDiscoverMovies(selectedGenreIds, activeTab)
+  // ← memoized so it doesn't create a new array on every render
+  const ratedMovies = useMemo(
+    () => disliked.map((m) => ({ movie: m, rating: 1 })),
+    [disliked]
+  )
+
+  const { movies, loading, error } = useDiscoverMovies(
+    selectedGenreIds,
+    activeTab,
+    ratedMovies
+  )
 
   const toggleGenre = (genreId: number) => {
     setSelectedGenreIds((current) =>
@@ -146,7 +175,9 @@ export default function Discover() {
                     <div className='h-4 w-2/3 rounded bg-slate-700' />
                     <div className='mt-2 h-3 w-1/3 rounded bg-slate-700' />
                   </div>
-                  <div className='ml-3 rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200'>--</div>
+                  <div className='ml-3 rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200'>
+                    --
+                  </div>
                 </div>
               </div>
             ))}
@@ -182,12 +213,17 @@ export default function Discover() {
                     <div className='mt-3 flex flex-col gap-1 flex-1'>
                       <div className='flex items-start justify-between gap-2'>
                         <h3 className='text-sm font-semibold leading-snug'>{movie.title}</h3>
-                        <span className='shrink-0 text-xs text-slate-400'>{releaseYear(movie.release_date)}</span>
+                        <span className='shrink-0 text-xs text-slate-400'>
+                          {releaseYear(movie.release_date)}
+                        </span>
                       </div>
 
                       <div className='flex flex-wrap gap-1 mt-1'>
                         {movie.genre_ids.slice(0, 3).map((gid) => (
-                          <span key={gid} className='rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300'>
+                          <span
+                            key={gid}
+                            className='rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300'
+                          >
                             {genreMap[gid] ?? 'Unknown'}
                           </span>
                         ))}
@@ -201,7 +237,9 @@ export default function Discover() {
                     </div>
 
                     <div className='mt-3 flex items-center justify-between'>
-                      <span className='text-xs text-slate-400'>⭐ {movie.vote_average.toFixed(1)}</span>
+                      <span className='text-xs text-slate-400'>
+                        ⭐ {movie.vote_average.toFixed(1)}
+                      </span>
                       <button
                         type='button'
                         onClick={(e) => toggleLike(e, movie)}
@@ -225,12 +263,14 @@ export default function Discover() {
       {selectedItem && (
         <MediaModal
           item={selectedItem}
-          mediaType={activeTab}  // or selectedItem.media_type in Watchlist.tsx
+          mediaType={selectedItem.media_type}
           genreMap={genreMap}
           onClose={() => setSelectedItem(null)}
           onSelect={(item) => setSelectedItem(item)}
           isInWatchlist={isInWatchlist(selectedItem.id)}
           onToggleWatchlist={() => toggleWatchlist(selectedItem)}
+          isDisliked={isDisliked(selectedItem.id)}
+          onToggleDisliked={() => toggleDisliked(selectedItem)}
         />
       )}
     </div>

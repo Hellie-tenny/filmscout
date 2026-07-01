@@ -10,12 +10,23 @@ type Props = {
   onSelect: (item: MediaItem) => void
   isInWatchlist: boolean
   onToggleWatchlist: () => void
+  isDisliked: boolean
+  onToggleDisliked: () => void
 }
 
-export default function MediaModal({ item, mediaType, genreMap, onClose, onSelect, isInWatchlist, onToggleWatchlist }: Props) {
+export default function MediaModal({
+  item,
+  mediaType,
+  genreMap,
+  onClose,
+  onSelect,
+  isInWatchlist,
+  onToggleWatchlist,
+  isDisliked,
+  onToggleDisliked,
+}: Props) {
   const { details, loading, error } = useMediaDetails(item.id, mediaType)
 
-  // close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -24,19 +35,26 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
-  // prevent body scroll while modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
+  const handleToggleWatchlist = () => {
+    if (isDisliked) return // can't add to watchlist while disliked
+    onToggleWatchlist()
+  }
+
+  const handleToggleDisliked = () => {
+    if (isInWatchlist) onToggleWatchlist() // remove from watchlist first
+    onToggleDisliked()
+  }
+
   return (
-    // backdrop
     <div
       className='fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 px-0 sm:px-4'
       onClick={onClose}
     >
-      {/* modal panel */}
       <div
         className='relative w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-slate-900 text-white'
         onClick={(e) => e.stopPropagation()}
@@ -54,7 +72,7 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
         {loading ? (
           <div className='w-full h-52 bg-slate-800 animate-pulse' />
         ) : details?.backdrop_path ? (
-          <div className='relative w-full h-52 overflow-hidden rounded-t-2xl sm:rounded-t-2xl'>
+          <div className='relative w-full h-52 overflow-hidden rounded-t-2xl'>
             <img
               src={`https://image.tmdb.org/t/p/w780${details.backdrop_path}`}
               alt={details.title}
@@ -70,19 +88,24 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
 
         <div className='px-5 pb-6'>
 
-          {/* title + meta */}
+          {/* title */}
           <div className='mt-3'>
             <h2 className='text-xl font-bold leading-snug'>
-              {loading ? <span className='block h-6 w-2/3 rounded bg-slate-700 animate-pulse' /> : details?.title ?? item.title}
+              {loading
+                ? <span className='block h-6 w-2/3 rounded bg-slate-700 animate-pulse' />
+                : details?.title ?? item.title}
             </h2>
 
+            {/* meta */}
             {!loading && details && (
               <div className='flex flex-wrap items-center gap-3 mt-1 text-sm text-slate-400'>
                 <span>⭐ {details.vote_average.toFixed(1)}</span>
                 <span>{details.release_date?.slice(0, 4)}</span>
                 {details.runtime && <span>{details.runtime} min</span>}
                 {details.number_of_seasons && (
-                  <span>{details.number_of_seasons} season{details.number_of_seasons > 1 ? 's' : ''}</span>
+                  <span>
+                    {details.number_of_seasons} season{details.number_of_seasons > 1 ? 's' : ''}
+                  </span>
                 )}
               </div>
             )}
@@ -91,23 +114,48 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
               <p className='mt-1 text-xs italic text-slate-500'>{details.tagline}</p>
             )}
           </div>
+
+          {/* action buttons — mutually exclusive, single set */}
           {!loading && details && (
-            <button
-              type='button'
-              onClick={onToggleWatchlist}
-              className={`mt-3 rounded-full px-4 py-2 text-sm font-medium transition-colors ${isInWatchlist
-                  ? 'bg-green-500 text-slate-950'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            <div className='mt-4 flex gap-2'>
+              {/* watchlist button — hidden when disliked */}
+              {!isDisliked && (
+                <button
+                  type='button'
+                  onClick={handleToggleWatchlist}
+                  className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    isInWatchlist
+                      ? 'bg-green-500 text-slate-950'
+                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  }`}
+                >
+                  {isInWatchlist ? '✓ In Watchlist' : '+ Watchlist'}
+                </button>
+              )}
+
+              {/* dislike button — shown always, but label changes */}
+              <button
+                type='button'
+                onClick={handleToggleDisliked}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  isDisliked
+                    ? 'w-full bg-rose-500 text-white hover:bg-rose-400'
+                    : 'bg-slate-700 text-slate-300 hover:bg-rose-500 hover:text-white'
                 }`}
-            >
-              {isInWatchlist ? '✓ Added to Watchlist' : '+ Add to Watchlist'}
-            </button>
+              >
+                {isDisliked ? '↩ Undo — Not for me' : '👎 Not for me'}
+              </button>
+            </div>
           )}
+
           {/* genre tags */}
           {!loading && details && (
-            <div className='flex flex-wrap gap-1 mt-3'>
+            <div className='flex flex-wrap gap-1 mt-4'>
               {details.genre_ids.map((gid) => (
-                <span key={gid} className='rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300'>
+                <span
+                  key={gid}
+                  className='rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300'
+                >
                   {genreMap[gid] ?? 'Unknown'}
                 </span>
               ))}
@@ -125,7 +173,10 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
               <p className='text-xs text-slate-400 mb-2'>Available on</p>
               <div className='flex flex-wrap gap-2'>
                 {details.providers.map((p) => (
-                  <div key={p.provider_name} className='flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1'>
+                  <div
+                    key={p.provider_name}
+                    className='flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1'
+                  >
                     <img
                       src={`https://image.tmdb.org/t/p/w45${p.logo_path}`}
                       alt={p.provider_name}
@@ -180,7 +231,9 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
                         No image
                       </div>
                     )}
-                    <p className='mt-1 text-xs text-slate-300 line-clamp-2 leading-snug'>{rec.title}</p>
+                    <p className='mt-1 text-xs text-slate-300 line-clamp-2 leading-snug'>
+                      {rec.title}
+                    </p>
                     <p className='text-xs text-amber-400'>⭐ {rec.vote_average.toFixed(1)}</p>
                   </button>
                 ))}
@@ -188,7 +241,7 @@ export default function MediaModal({ item, mediaType, genreMap, onClose, onSelec
             </div>
           )}
 
-          {/* loading skeleton for details */}
+          {/* loading skeleton */}
           {loading && (
             <div className='mt-3 space-y-2 animate-pulse'>
               <div className='h-4 w-full rounded bg-slate-700' />

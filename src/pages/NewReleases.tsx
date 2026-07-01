@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useNewReleases from '../hooks/useNewReleases'
 import MediaModal from '../components/MediaModal'
 import type { MediaItem, MediaType } from '../types/media'
 import useWatchlist from '../hooks/useWatchlist'
+import useDisliked from '../hooks/useDisliked'
 
 const MOVIE_GENRES = [
     { id: 28, name: 'Action' },
@@ -46,10 +47,25 @@ const TV_GENRES = [
 ]
 
 export default function NewReleases() {
-    const [activeTab, setActiveTab] = useState<MediaType>('movie')
-    const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null)
+    const [activeTab, setActiveTab] = useState<MediaType>(() => {
+        return (localStorage.getItem('newreleases_tab') as MediaType) ?? 'movie'
+    })
+    const [selectedGenreId, setSelectedGenreId] = useState<number | null>(() => {
+        try {
+            const saved = localStorage.getItem('newreleases_genre')
+            return saved ? JSON.parse(saved) : null
+        } catch {
+            return null
+        }
+    })
+
+    useEffect(() => {
+        localStorage.setItem('newreleases_tab', activeTab)
+        localStorage.setItem('newreleases_genre', JSON.stringify(selectedGenreId))
+    }, [activeTab, selectedGenreId])
     const { isInWatchlist, toggleWatchlist } = useWatchlist()
     const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null)
+    const { isDisliked, toggleDisliked } = useDisliked()
 
     const genres = activeTab === 'movie' ? MOVIE_GENRES : TV_GENRES
     const genreMap: Record<number, string> = Object.fromEntries(genres.map((g) => [g.id, g.name]))
@@ -87,8 +103,8 @@ export default function NewReleases() {
                         type='button'
                         onClick={() => handleTabSwitch(tab)}
                         className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${activeTab === tab
-                                ? 'bg-green-500 text-slate-950'
-                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            ? 'bg-green-500 text-slate-950'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                             }`}
                     >
                         {tab === 'movie' ? 'Movies' : 'TV Shows'}
@@ -106,8 +122,8 @@ export default function NewReleases() {
                             type='button'
                             onClick={() => selectGenre(genre.id)}
                             className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-150 ${isSelected
-                                    ? 'border-green-500 bg-green-500 text-slate-950'
-                                    : 'border-slate-700 bg-slate-900/70 text-slate-200 hover:border-slate-500 hover:bg-slate-800'
+                                ? 'border-green-500 bg-green-500 text-slate-950'
+                                : 'border-slate-700 bg-slate-900/70 text-slate-200 hover:border-slate-500 hover:bg-slate-800'
                                 }`}
                         >
                             {genre.name}
@@ -188,8 +204,8 @@ export default function NewReleases() {
                                                 type='button'
                                                 onClick={(e) => toggleLike(e, movie)}
                                                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${isLiked
-                                                        ? 'bg-green-500 text-slate-950'
-                                                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                                    ? 'bg-green-500 text-slate-950'
+                                                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                                                     }`}
                                             >
                                                 {isLiked ? '✓ Added' : '+ Watchlist'}
@@ -214,12 +230,14 @@ export default function NewReleases() {
             {selectedItem && (
                 <MediaModal
                     item={selectedItem}
-                    mediaType={activeTab}  // or selectedItem.media_type in Watchlist.tsx
-                    genreMap={genreMap}
+                    mediaType={selectedItem.media_type} // or activeTab for Discover/NewReleases
+                    genreMap={genreMap} // or GENRE_MAP for Search/Watchlist
                     onClose={() => setSelectedItem(null)}
                     onSelect={(item) => setSelectedItem(item)}
                     isInWatchlist={isInWatchlist(selectedItem.id)}
                     onToggleWatchlist={() => toggleWatchlist(selectedItem)}
+                    isDisliked={isDisliked(selectedItem.id)}
+                    onToggleDisliked={() => toggleDisliked(selectedItem)}
                 />
             )}
         </div>

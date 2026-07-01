@@ -3,6 +3,7 @@ import useSearch from '../hooks/useSearch'
 import useWatchlist from '../hooks/useWatchlist'
 import MediaModal from '../components/MediaModal'
 import type { MediaItem } from '../types/media'
+import useDisliked from '../hooks/useDisliked'
 
 const MOVIE_GENRES = [
   { id: 28, name: 'Action' }, { id: 12, name: 'Adventure' }, { id: 16, name: 'Animation' },
@@ -32,6 +33,7 @@ export default function Search() {
   const { results, loading, error } = useSearch(query)
   const { isInWatchlist, toggleWatchlist } = useWatchlist()
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null)
+  const { isDisliked, toggleDisliked } = useDisliked()
 
   const releaseYear = (date: string) => date?.slice(0, 4) ?? '—'
 
@@ -130,11 +132,10 @@ export default function Search() {
                     <button
                       type='button'
                       onClick={(e) => toggleLike(e, movie)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                        isLiked
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${isLiked
                           ? 'bg-green-500 text-slate-950'
                           : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                      }`}
+                        }`}
                     >
                       {isLiked ? '✓ Added' : '+ Watchlist'}
                     </button>
@@ -149,12 +150,14 @@ export default function Search() {
       {selectedItem && (
         <MediaModal
           item={selectedItem}
-          mediaType={selectedItem.media_type}
-          genreMap={GENRE_MAP}
+          mediaType={selectedItem.media_type} // or activeTab for Discover/NewReleases
+          genreMap={genreMap} // or GENRE_MAP for Search/Watchlist
           onClose={() => setSelectedItem(null)}
           onSelect={(item) => setSelectedItem(item)}
           isInWatchlist={isInWatchlist(selectedItem.id)}
           onToggleWatchlist={() => toggleWatchlist(selectedItem)}
+          isDisliked={isDisliked(selectedItem.id)}
+          onToggleDisliked={() => toggleDisliked(selectedItem)}
         />
       )}
     </div>
