@@ -4,6 +4,13 @@ import mockMovies from '../mocks/mockMovies'
 
 type RatedMovie = { movie: MediaItem; rating: number }
 
+type Filters = {
+  yearFrom: number | null
+  yearTo: number | null
+  adultContent: boolean
+}
+
+
 export function contentScore(
   movie: MediaItem,
   selectedGenreIds: number[],
@@ -43,7 +50,8 @@ export default function useDiscoverMovies(
   genreIds: number[],
   mediaType: 'movie' | 'tv' = 'movie',
   ratedMoviesParam?: RatedMovie[],
-  likedMoviesParam?: MediaItem[]
+  likedMoviesParam?: MediaItem[],
+  filters?: Filters
 ) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,6 +64,7 @@ export default function useDiscoverMovies(
   const likedMovies = useMemo<MediaItem[]>(() => likedMoviesParam ?? [], [likedMoviesParam])
 
   const fetchMovies = useCallback(async () => {
+
     if (!genreIds || genreIds.length === 0) {
       setMovies([])
       setError(null)
@@ -94,6 +103,17 @@ export default function useDiscoverMovies(
 
     try {
       const fetches = genreIds.map(async (gid) => {
+        // const params = new URLSearchParams({
+        //   'vote_average.gte': '7.0',
+        //   'vote_count.gte': '200',
+        //   sort_by: 'vote_average.desc',
+        //   language: 'en-US',
+        //   page: '1',
+        //   with_genres: String(gid),
+        // })
+
+        const dateField = mediaType === 'movie' ? 'primary_release_date' : 'first_air_date'
+
         const params = new URLSearchParams({
           'vote_average.gte': '7.0',
           'vote_count.gte': '200',
@@ -101,7 +121,15 @@ export default function useDiscoverMovies(
           language: 'en-US',
           page: '1',
           with_genres: String(gid),
+          include_adult: filters?.adultContent ? 'true' : 'false',
         })
+
+        if (filters?.yearFrom) {
+          params.append(`${dateField}.gte`, `${filters.yearFrom}-01-01`)
+        }
+        if (filters?.yearTo) {
+          params.append(`${dateField}.lte`, `${filters.yearTo}-12-31`)
+        }
 
         // If an API key is provided (v3), use it as a query param. Otherwise use v4 Bearer token.
         if (apiKey) params.append('api_key', String(apiKey))
@@ -143,7 +171,7 @@ export default function useDiscoverMovies(
       setMovies([])
       setLoading(false)
     }
-  }, [genreIds, mediaType, ratedMovies, likedMovies])
+  }, [genreIds, mediaType, ratedMovies, likedMovies, filters])
 
   useEffect(() => {
     fetchMovies()

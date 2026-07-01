@@ -4,7 +4,7 @@ import MediaModal from '../components/MediaModal'
 import type { MediaItem, MediaType } from '../types/media'
 import useWatchlist from '../hooks/useWatchlist'
 import useDisliked from '../hooks/useDisliked'
-import { Film } from 'lucide-react'
+import { Film, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react'
 
 const MOVIE_GENRES = [
   { id: 28, name: 'Action' },
@@ -47,6 +47,31 @@ const TV_GENRES = [
   { id: 37, name: 'Western' },
 ]
 
+const CURRENT_YEAR = new Date().getFullYear()
+const YEARS = Array.from({ length: CURRENT_YEAR - 1939 }, (_, i) => CURRENT_YEAR - i)
+
+const PERIOD_PRESETS = [
+  { label: 'This year', from: CURRENT_YEAR, to: CURRENT_YEAR },
+  { label: 'Last 5 years', from: CURRENT_YEAR - 5, to: CURRENT_YEAR },
+  { label: '2010s', from: 2010, to: 2019 },
+  { label: '2000s', from: 2000, to: 2009 },
+  { label: '90s', from: 1990, to: 1999 },
+  { label: '80s', from: 1980, to: 1989 },
+  { label: 'Classic', from: 1900, to: 1979 },
+]
+
+type Filters = {
+  yearFrom: number | null
+  yearTo: number | null
+  adultContent: boolean
+}
+
+const DEFAULT_FILTERS: Filters = {
+  yearFrom: null,
+  yearTo: null,
+  adultContent: false,
+}
+
 export default function Discover() {
   const [activeTab, setActiveTab] = useState<MediaType>(() => {
     return (localStorage.getItem('discover_tab') as MediaType) ?? 'movie'
@@ -60,6 +85,8 @@ export default function Discover() {
     }
   })
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
 
   useEffect(() => {
     localStorage.setItem('discover_tab', activeTab)
@@ -67,14 +94,13 @@ export default function Discover() {
   }, [activeTab, selectedGenreIds])
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist()
-  const { isDisliked, toggleDisliked, disliked } = useDisliked() // ← single call
+  const { isDisliked, toggleDisliked, disliked } = useDisliked()
 
   const genres = activeTab === 'movie' ? MOVIE_GENRES : TV_GENRES
   const genreMap: Record<number, string> = Object.fromEntries(
     genres.map((g) => [g.id, g.name])
   )
 
-  // ← memoized so it doesn't create a new array on every render
   const ratedMovies = useMemo(
     () => disliked.map((m) => ({ movie: m, rating: 1 })),
     [disliked]
@@ -83,8 +109,17 @@ export default function Discover() {
   const { movies, loading, error } = useDiscoverMovies(
     selectedGenreIds,
     activeTab,
-    ratedMovies
+    ratedMovies,
+    undefined,
+    filters
   )
+
+  // count active filters for the badge
+  const activeFilterCount = [
+    filters.yearFrom !== null,
+    filters.yearTo !== null,
+    filters.adultContent,
+  ].filter(Boolean).length
 
   const toggleGenre = (genreId: number) => {
     setSelectedGenreIds((current) =>
@@ -104,7 +139,17 @@ export default function Discover() {
   const handleTabSwitch = (tab: MediaType) => {
     setActiveTab(tab)
     setSelectedGenreIds([])
+    setFilters(DEFAULT_FILTERS)
   }
+
+  const applyPreset = (from: number, to: number) => {
+    setFilters((f) => ({ ...f, yearFrom: from, yearTo: to }))
+  }
+
+  const clearFilters = () => setFilters(DEFAULT_FILTERS)
+
+  const isPresetActive = (from: number, to: number) =>
+    filters.yearFrom === from && filters.yearTo === to
 
   return (
     <div className='px-4 py-8 text-white sm:px-6 lg:px-8'>
@@ -120,10 +165,11 @@ export default function Discover() {
             key={tab}
             type='button'
             onClick={() => handleTabSwitch(tab)}
-            className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${activeTab === tab
-              ? 'bg-green-500 text-slate-950'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+              activeTab === tab
+                ? 'bg-green-500 text-slate-950'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
           >
             {tab === 'movie' ? 'Movies' : 'TV Shows'}
           </button>
@@ -139,10 +185,11 @@ export default function Discover() {
               key={genre.id}
               type='button'
               onClick={() => toggleGenre(genre.id)}
-              className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-150 ${isSelected
-                ? 'border-green-500 bg-green-500 text-slate-950'
-                : 'border-slate-700 bg-slate-900/70 text-slate-200 hover:border-slate-500 hover:bg-slate-800'
-                }`}
+              className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-150 ${
+                isSelected
+                  ? 'border-green-500 bg-green-500 text-slate-950'
+                  : 'border-slate-700 bg-slate-900/70 text-slate-200 hover:border-slate-500 hover:bg-slate-800'
+              }`}
             >
               {genre.name}
             </button>
@@ -154,6 +201,152 @@ export default function Discover() {
         <p className='mt-4 text-sm text-slate-400'>
           {selectedGenreIds.length} genre{selectedGenreIds.length === 1 ? '' : 's'} selected
         </p>
+      )}
+
+      {/* filters toggle button */}
+      <div className='mt-5 flex items-center gap-3'>
+        <button
+          type='button'
+          onClick={() => setFiltersOpen((o) => !o)}
+          className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+            filtersOpen || activeFilterCount > 0
+              ? 'border-green-500 bg-green-500/10 text-green-400'
+              : 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+          }`}
+        >
+          <SlidersHorizontal className='w-4 h-4' />
+          Filters
+          {activeFilterCount > 0 && (
+            <span className='rounded-full bg-green-500 text-slate-950 text-xs font-bold px-1.5 py-0.5 leading-none'>
+              {activeFilterCount}
+            </span>
+          )}
+          {filtersOpen
+            ? <ChevronUp className='w-4 h-4' />
+            : <ChevronDown className='w-4 h-4' />
+          }
+        </button>
+
+        {activeFilterCount > 0 && (
+          <button
+            type='button'
+            onClick={clearFilters}
+            className='flex items-center gap-1 text-xs text-slate-400 hover:text-rose-400 transition-colors'
+          >
+            <X className='w-3 h-3' />
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {/* collapsible filters panel */}
+      {filtersOpen && (
+        <div className='mt-3 rounded-xl border border-slate-700/50 bg-slate-900/60 p-5 flex flex-col gap-6'>
+
+          {/* period presets */}
+          <div>
+            <p className='text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3'>
+              Period
+            </p>
+            <div className='flex flex-wrap gap-2'>
+              {PERIOD_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type='button'
+                  onClick={() => applyPreset(preset.from, preset.to)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    isPresetActive(preset.from, preset.to)
+                      ? 'border-green-500 bg-green-500 text-slate-950'
+                      : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* custom year range */}
+          <div>
+            <p className='text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3'>
+              Custom Year Range
+            </p>
+            <div className='flex items-center gap-3'>
+              <select
+                value={filters.yearFrom ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    yearFrom: e.target.value ? Number(e.target.value) : null,
+                  }))
+                }
+                className='rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 outline-none focus:border-green-500 transition-colors'
+              >
+                <option value=''>From</option>
+                {YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+
+              <span className='text-slate-500 text-sm'>to</span>
+
+              <select
+                value={filters.yearTo ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    yearTo: e.target.value ? Number(e.target.value) : null,
+                  }))
+                }
+                className='rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 outline-none focus:border-green-500 transition-colors'
+              >
+                <option value=''>To</option>
+                {YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* adult content toggle */}
+          <div>
+            <p className='text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3'>
+              Content
+            </p>
+            <button
+              type='button'
+              onClick={() => setFilters((f) => ({ ...f, adultContent: !f.adultContent }))}
+              className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors w-full sm:w-auto ${
+                filters.adultContent
+                  ? 'border-rose-500 bg-rose-500/10 text-rose-400'
+                  : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500'
+              }`}
+            >
+              <div
+                className={`w-9 h-5 rounded-full transition-colors relative flex-shrink-0 ${
+                  filters.adultContent ? 'bg-rose-500' : 'bg-slate-600'
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                    filters.adultContent ? 'translate-x-4' : 'translate-x-0.5'
+                  }`}
+                />
+              </div>
+              <div className='text-left'>
+                <p className='text-sm font-medium'>
+                  {filters.adultContent ? 'Adult content on' : 'Adult content off'}
+                </p>
+                <p className='text-xs text-slate-500'>
+                  {filters.adultContent
+                    ? 'Showing 18+ titles in results'
+                    : 'Only showing family-safe results'}
+                </p>
+              </div>
+            </button>
+          </div>
+
+        </div>
       )}
 
       <div className='mt-6'>
@@ -244,10 +437,11 @@ export default function Discover() {
                       <button
                         type='button'
                         onClick={(e) => toggleLike(e, movie)}
-                        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${isLiked
-                          ? 'bg-green-500 text-slate-950'
-                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                          }`}
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                          isLiked
+                            ? 'bg-green-500 text-slate-950'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
                       >
                         {isLiked ? '✓ Added' : '+ Watchlist'}
                       </button>
