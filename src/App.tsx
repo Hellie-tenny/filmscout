@@ -1,6 +1,7 @@
 import './App.css'
 import { Routes, Route } from 'react-router'
 import Header from './components/Header'
+import Footer from './components/Footer'
 import Landing from './components/Landing'
 import Discover from './pages/Discover'
 import NewReleases from './pages/NewReleases'
@@ -9,15 +10,18 @@ import Search from './pages/Search'
 
 function App() {
   return (
-    <div className='min-h-screen w-full bg-slate-800 text-white'>
+    <div className='min-h-screen w-full bg-slate-800 text-white flex flex-col'>
       <Header />
-      <Routes>
-        <Route path='/' element={<Landing />} />
-        <Route path='/discover' element={<Discover />} />
-        <Route path='/new-releases' element={<NewReleases />} />
-        <Route path='/watchlist' element={<Watchlist />} />
-        <Route path='/search' element={<Search />} />
-      </Routes>
+      <main className='flex-1'>
+        <Routes>
+          <Route path='/' element={<Landing />} />
+          <Route path='/discover' element={<Discover />} />
+          <Route path='/new-releases' element={<NewReleases />} />
+          <Route path='/watchlist' element={<Watchlist />} />
+          <Route path='/search' element={<Search />} />
+        </Routes>
+      </main>
+      <Footer />
     </div>
   )
 }
