@@ -4,13 +4,15 @@ import Hero from './Hero'
 import Featured from './Featured'
 import useLanding from '../hooks/useLanding'
 import type { MediaType } from '../types/media'
+import { Clapperboard, Sparkles, Bookmark } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 const HOW_IT_WORKS = [
   {
     step: '01',
     title: 'Pick Your Genres',
     description: 'Choose the kinds of movies or shows you are in the mood for — action, drama, comedy, and more.',
-    icon: '🎭',
+    icon: <Clapperboard className='w-7 h-7 text-green-400' />,
     link: '/discover',
     cta: 'Go to Discover',
   },
@@ -18,7 +20,7 @@ const HOW_IT_WORKS = [
     step: '02',
     title: 'Browse Top Picks',
     description: 'See top-rated titles streaming right now, ranked based on your taste and genre preferences.',
-    icon: '🎬',
+    icon: <Sparkles className='w-7 h-7 text-green-400' />,
     link: '/new-releases',
     cta: 'See New Releases',
   },
@@ -26,7 +28,7 @@ const HOW_IT_WORKS = [
     step: '03',
     title: 'Save What Excites You',
     description: 'Add anything that catches your eye to your watchlist and come back to it anytime.',
-    icon: '📺',
+    icon: <Bookmark className='w-7 h-7 text-green-400' />,
     link: '/watchlist',
     cta: 'My Watchlist',
   },

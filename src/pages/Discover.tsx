@@ -4,6 +4,7 @@ import MediaModal from '../components/MediaModal'
 import type { MediaItem, MediaType } from '../types/media'
 import useWatchlist from '../hooks/useWatchlist'
 import useDisliked from '../hooks/useDisliked'
+import { Film } from 'lucide-react'
 
 const MOVIE_GENRES = [
   { id: 28, name: 'Action' },
@@ -160,7 +161,7 @@ export default function Discover() {
 
         {!error && selectedGenreIds.length === 0 && (
           <div className='mt-10 flex flex-col items-center text-center text-slate-500'>
-            <span className='text-4xl mb-3'>🎬</span>
+            <Film className='w-10 h-10 text-slate-600 mb-3' />
             <p className='text-sm'>Pick a genre above to get started.</p>
           </div>
         )}

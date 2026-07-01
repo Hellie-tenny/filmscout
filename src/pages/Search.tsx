@@ -4,6 +4,7 @@ import useWatchlist from '../hooks/useWatchlist'
 import MediaModal from '../components/MediaModal'
 import type { MediaItem } from '../types/media'
 import useDisliked from '../hooks/useDisliked'
+import { Search as SearchIcon, SearchX } from 'lucide-react'
 
 const MOVIE_GENRES = [
   { id: 28, name: 'Action' }, { id: 12, name: 'Adventure' }, { id: 16, name: 'Animation' },
@@ -63,7 +64,7 @@ export default function Search() {
 
         {query.trim().length === 0 && !error && (
           <div className='mt-10 flex flex-col items-center text-center text-slate-500'>
-            <span className='text-4xl mb-3'>🔎</span>
+            <SearchIcon className='w-10 h-10 text-slate-600 mb-3' />
             <p className='text-sm'>Start typing to search.</p>
           </div>
         )}
@@ -82,7 +83,7 @@ export default function Search() {
 
         {!loading && !error && query.trim().length > 0 && results.length === 0 && (
           <div className='mt-10 flex flex-col items-center text-center text-slate-500'>
-            <span className='text-4xl mb-3'>🤷</span>
+            <SearchX className='w-10 h-10 text-slate-600 mb-3' />
             <p className='text-sm'>No results found for &quot;{query}&quot;.</p>
           </div>
         )}

@@ -3,6 +3,7 @@ import useWatchlist from '../hooks/useWatchlist'
 import MediaModal from '../components/MediaModal'
 import type { MediaItem } from '../types/media'
 import useDisliked from '../hooks/useDisliked'
+import { Tv } from 'lucide-react'
 
 export default function Watchlist() {
     const MOVIE_GENRES = [
@@ -66,7 +67,7 @@ export default function Watchlist() {
 
             {watchlist.length === 0 ? (
                 <div className='mt-10 flex flex-col items-center text-center text-slate-500'>
-                    <span className='text-4xl mb-3'>📺</span>
+                    <Tv className='w-10 h-10 text-slate-600 mb-3' />
                     <p className='text-sm'>Add movies or shows to your watchlist to see them here.</p>
                 </div>
             ) : (
